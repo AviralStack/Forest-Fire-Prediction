@@ -1,0 +1,22 @@
+# 1. Ignore Jupyter Notebook Autosaves (The folder visible in your image)
+.ipynb_checkpoints
+.virtual_documents
+.vscode
+__pycache__
+
+# 2. Ignore garbage files
+*.pyc
+*.DS_Store
+
+# 3. Ignore Virtual Environments (If you created one)
+env/
+venv/
+.env
+
+# 4. Optional: Ignore the datasets if you want to save space
+# (Since you only need model.pkl to run the app, you don't strictly need the CSVs online)
+# Uncomment the next line if you want to hide the CSVs:
+# *.csv
+
+# 5. Ignore scratchpad notebooks
+Untitled.ipynb
