@@ -74,6 +74,6 @@ If you want to run this app on your own machine:
 * **Deployment:** Streamlit Cloud
 
 ## 👨‍💻 Author
-**[Your Name]**
+**[Aviral Gupta]**
 * [LinkedIn](https://www.linkedin.com/in/aviral-gupta-2208b0330/)
 * [GitHub](https://github.com/AviralStack)
