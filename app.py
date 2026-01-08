@@ -2,7 +2,8 @@ import streamlit as st
 import pickle
 import numpy as np
 
-# 1. Load the Model and Scaler
+# 1. Load the New Phase 2 Models
+# This will load your NEW model.pkl (Logistic) and scaler.pkl
 @st.cache_resource
 def load_model():
     with open('scaler.pkl', 'rb') as f:
@@ -13,48 +14,59 @@ def load_model():
 
 scaler, model = load_model()
 
-# 2. App Title and Description
-st.title("🔥 Forest Fire Prediction App")
-st.write("Enter the weather conditions below to predict if a forest fire is likely to occur.")
+# 2. Title & Description
+st.set_page_config(page_title="Global Fire Risk", page_icon="🌍")
+st.title("🌍 Global Fire Risk Calculator")
+st.markdown("Enter weather data to calculate the **Probability (%)** of a forest fire.")
 
-# 3. Create Input Fields
-col1, col2 = st.columns(2)
+# 3. Sidebar for Inputs (Cleaner Look)
+st.sidebar.header("Weather Inputs")
 
-with col1:
-    # Region is vital! We map 0 -> Bejaia, 1 -> Sidi-Bel Abbes
-    region = st.selectbox("Region", options=[0, 1], format_func=lambda x: "Bejaia (0)" if x == 0 else "Sidi-Bel Abbes (1)")
-    temperature = st.number_input("Temperature (°C)", min_value=0.0, max_value=50.0, value=30.0)
-    rh = st.number_input("Relative Humidity (%)", min_value=0.0, max_value=100.0, value=60.0)
-    ws = st.number_input("Wind Speed (km/h)", min_value=0.0, max_value=50.0, value=15.0)
+# Region: 0 = Bejaia (Humid), 1 = Sidi-Bel Abbes (Dry)
+region = st.sidebar.selectbox("Region Type", options=[0, 1], format_func=lambda x: "Bejaia (Humid)" if x == 0 else "Sidi-Bel Abbes (Dry)")
 
-with col2:
-    rain = st.number_input("Rain (mm)", min_value=0.0, max_value=50.0, value=0.0)
-    ffmc = st.number_input("FFMC Index", min_value=0.0, max_value=100.0, value=80.0)
-    dmc = st.number_input("DMC Index", min_value=0.0, max_value=200.0, value=20.0)
-    isi = st.number_input("ISI Index", min_value=0.0, max_value=50.0, value=10.0)
+temperature = st.sidebar.slider("Temperature (°C)", 0, 50, 30)
+rh = st.sidebar.slider("Relative Humidity (%)", 0, 100, 60)
+ws = st.sidebar.slider("Wind Speed (km/h)", 0, 50, 15)
+rain = st.sidebar.slider("Rain (mm)", 0.0, 50.0, 0.0)
 
-# 4. Predict Button
-if st.button("Predict Fire Risk"):
+st.sidebar.header("FWI Components")
+ffmc = st.sidebar.slider("FFMC Index", 0.0, 100.0, 80.0)
+dmc = st.sidebar.slider("DMC Index", 0.0, 200.0, 20.0)
+isi = st.sidebar.slider("ISI Index", 0.0, 50.0, 10.0)
+
+# 4. Main Display Area
+st.write("### 🔍 Live Analysis")
+
+if st.button("Calculate Risk"):
     try:
-        # CRITICAL FIX: Order matches your X_train (Region is FIRST)
+        # Prepare inputs (Exact order as training!)
+        # [Region, Temp, RH, Ws, Rain, FFMC, DMC, ISI]
         features = np.array([[region, temperature, rh, ws, rain, ffmc, dmc, isi]])
         
-        # Scale the data
+        # Scale the data using the new scaler
         scaled_features = scaler.transform(features)
         
-        # Make prediction
-        prediction = model.predict(scaled_features)
+        # Predict PROBABILITY (The Phase 2 Upgrade)
+        # returns [Prob_No_Fire, Prob_Fire] -> We want [1]
+        prob_array = model.predict_proba(scaled_features)
+        fire_risk = prob_array[0][1] * 100  # Convert to percentage
         
-        # EXTRACT THE NUMBER using [0]
-        result_value = prediction[0]
+        # Display Result with Metrics
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric(label="🔥 Fire Probability", value=f"{fire_risk:.2f}%")
         
-        st.subheader("Prediction Result:")
+        # Visual Progress Bar
+        st.progress(int(fire_risk))
         
-        # Logic: Threshold at 0.5
-        if result_value > 0.5:
-            st.error(f"⚠️ FIRE LIKELY! (Score: {result_value:.4f})")
+        # Dynamic Warning Logic
+        if fire_risk > 75:
+            st.error("🚨 EXTREME DANGER! High probability of fire.")
+        elif fire_risk > 40:
+            st.warning("⚠️ MODERATE RISK. Conditions are dangerous.")
         else:
-            st.success(f"✅ NO FIRE. (Score: {result_value:.4f})")
+            st.success("✅ LOW RISK. Conditions are safe.")
             
     except Exception as e:
-        st.error(f"An error occurred: {e}")
+        st.error(f"Error: {e}")
