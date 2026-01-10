@@ -15,8 +15,8 @@ def load_model():
 scaler, model = load_model()
 
 # 2. Title & Description
-st.set_page_config(page_title="Global Fire Risk", page_icon="🌍")
-st.title("🌍 Global Fire Risk Calculator")
+st.set_page_config(page_title="Algerian Forest Fires Risk", page_icon="🌍")
+st.title("🌍 Algerian Forest Fires Calculator")
 st.markdown("Enter weather data to calculate the **Probability (%)** of a forest fire.")
 
 # 3. Sidebar for Inputs
